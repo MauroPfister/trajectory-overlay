@@ -83,8 +83,7 @@ def calibrate(obj_points, img_points, img_size_wh):
     dist_coeffs_guess = np.zeros(5)
 
     flags = cv2.CALIB_FIX_PRINCIPAL_POINT + cv2.CALIB_FIX_ASPECT_RATIO
-    flags = cv2.CALIB_FIX_PRINCIPAL_POINT + cv2.CALIB_FIX_ASPECT_RATIO + cv2.CALIB_RATIONAL_MODEL
-    flags = cv2.CALIB_FIX_PRINCIPAL_POINT + cv2.CALIB_FIX_ASPECT_RATIO + cv2.CALIB_ZERO_TANGENT_DIST
+    # flags = cv2.CALIB_FIX_PRINCIPAL_POINT + cv2.CALIB_FIX_ASPECT_RATIO + cv2.CALIB_ZERO_TANGENT_DIST
     rms, cam_mtx, dist_coeffs, _rvecs, _tvecs = cv2.calibrateCamera(obj_points,
                                                                     img_points, 
                                                                     img_size_wh,
