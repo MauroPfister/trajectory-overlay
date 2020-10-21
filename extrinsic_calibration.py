@@ -47,8 +47,20 @@ def get_marker_img_pos(img):
 
 def calculate_cam_pose(marker_pos, marker_img_pos, cam_mtx, dist_coeffs):
     """Calculate camera pose using marker positions in 3D and 2D."""
-    rms, rvec, tvec = cv2.solvePnP(marker_pos, marker_img_pos, cam_mtx, dist_coeffs, flags=cv2.SOLVEPNP_EPNP)
+    # Get initial estimation
+    method = cv2.SOLVEPNP_EPNP
+    ret, rvec_init, tvec_init = cv2.solvePnP(marker_pos, marker_img_pos, cam_mtx, dist_coeffs, flags=method)
 
+    # Refine with iterative method
+    method = cv2.SOLVEPNP_ITERATIVE
+    ret, rvec, tvec = cv2.solvePnP(marker_pos, 
+                                   marker_img_pos,
+                                   cam_mtx,
+                                   dist_coeffs, 
+                                   rvec=rvec_init,
+                                   tvec=tvec_init,
+                                   useExtrinsicGuess=True,
+                                   flags=method)
     return rvec, tvec
 
 def check_reprojection(img, marker_pos, marker_img_pos, rvec, tvec, cam_mtx, dist_coeffs):
