@@ -16,21 +16,21 @@ def create_checkerboard_3d(pattern_size, square_size):
 
     return pattern_points
 
-def get_calibration_points(video_path, pattern_points, auto=False, n_calib_imgs=30):
+def get_calibration_points(video_file, pattern_points, auto=False, n_calib_imgs=30):
     """Extract image points of checkerboard corners in different frames of calibration video."""
     # Creating vector to store vectors of 3D points for each checkerboard image
     obj_points = []
     # Creating vector to store vectors of 2D points for each checkerboard image
     img_points = [] 
 
-    cap = cv2.VideoCapture(str(video_path))
+    cap = cv2.VideoCapture(str(video_file))
 
     # Check if camera opened successfully
     if not cap.isOpened(): 
-        raise FileNotFoundError(f"Video file {video_path} does not exist.")
+        raise FileNotFoundError(f"Video file {video_file} does not exist.")
 
     print(f"Please select {n_calib_imgs} images for the intrinsic calibration.")
-    print("'q': quit\n'y': use image for calibration\n'any other key': skip image")
+    print("'q': quit\n'y': use image for calibration\n'any other key': skip image\n")
 
     winname = 'Calibration image'
     cv2.namedWindow(winname, flags=cv2.WINDOW_NORMAL)
@@ -99,13 +99,34 @@ def calibrate(obj_points, img_points, img_size_wh):
 def print_intrinsic_parameters(cam_mtx, dist_coeffs, img_size_wh):
     """Pretty printing of camera parameters."""
     w, h = img_size_wh
+    coeff_names = ['k_1', 'k_2', 'p_1', 'p_2', 'k_3']
 
     print("\nCamera parameters:")
-    print(f"F_x: {cam_mtx[0, 0]:>10.2f} px at image size {w} x {h}")
-    print(f"F_y: {cam_mtx[1, 1]:>10.2f} px at image size {w} x {h}")
-    print(f"c_x: {cam_mtx[0, 2]:>10.2f} px, (ideal x center {w / 2} px)")
-    print(f"c_y: {cam_mtx[1, 2]:>10.2f} px, (ideal y center {h / 2} px)")
-    print(f"dist_coeffs: {dist_coeffs}\n")
+    print(f"{'':4}F_x: {cam_mtx[0, 0]:>10.2f} px at image size {w} x {h}")
+    print(f"{'':4}F_y: {cam_mtx[1, 1]:>10.2f} px at image size {w} x {h}")
+    print(f"{'':4}c_x: {cam_mtx[0, 2]:>10.2f} px, (ideal x center {w / 2} px)")
+    print(f"{'':4}c_y: {cam_mtx[1, 2]:>10.2f} px, (ideal y center {h / 2} px)")
+    print("\nDistortion coefficients:")
+    for i, name in enumerate(coeff_names):
+        print(f"{'':4}{name}: {dist_coeffs[i]:>10.2f}")
+    print("")
+
+def check_calibration(video_file, cam_mtx, dist_coeffs):
+    """Display undistorted frame of calibration video to visually check for bad calibration."""
+    cap = cv2.VideoCapture(str(video_file))
+    ret, img = cap.read()  # Read first frame
+    cap.release()
+
+    img_udist = cv2.undistort(img, cam_mtx, dist_coeffs)  # Undistort image
+
+    winname = 'Calibration image'
+    cv2.namedWindow(winname, flags=cv2.WINDOW_NORMAL)
+    cv2.resizeWindow(winname, 960, 540)
+    cv2.imshow(winname, img_udist)
+    print("Press any key to continue.")
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
 
 def save_intrinsic_calib(output_dir, cam_mtx, dist_coeffs, img_size_wh):
     """Save json file with intrinsic calibration in output directory."""
@@ -145,17 +166,18 @@ if __name__ == '__main__':
     square_size = args.square_size / 1000  # Size of checkerboard square in meters
 
     # Path to calibration video
-    video_path = Path(args.video_file)
+    video_file = Path(args.video_file)
     if args.output is not None:
         output_dir = args.output
     else:
-        output_dir = video_path.parent
+        output_dir = video_file.parent
         
     pattern_points = create_checkerboard_3d(pattern_size, square_size)
-    obj_points, img_points, img_size_wh = get_calibration_points(video_path,
+    obj_points, img_points, img_size_wh = get_calibration_points(video_file,
                                                                  pattern_points,
                                                                  auto=args.auto,
                                                                  n_calib_imgs=30)
     cam_mtx, dist_coeffs = calibrate(obj_points, img_points, img_size_wh)
     print_intrinsic_parameters(cam_mtx, dist_coeffs, img_size_wh)
+    check_calibration(video_file, cam_mtx, dist_coeffs)
     save_intrinsic_calib(output_dir, cam_mtx, dist_coeffs, img_size_wh)
