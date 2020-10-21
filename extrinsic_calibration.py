@@ -8,13 +8,14 @@ from pathlib import Path
 
 
 def draw_marker(x, y, img, color=(0, 0, 255), cross_size=5):
+    """Draw marker location on image."""
     x, y = int(x), int(y)
     cv2.line(img, (x - cross_size, y), (x + cross_size, y), color, thickness=1)
     cv2.line(img, (x, y - cross_size), (x, y + cross_size), color, thickness=1)
     cv2.circle(img, (x, y), 3, color, 1)
 
 def click_event(event, x, y, flags, params): 
-  
+    """Callback method for mouse click."""
     window_name = params[0]
     img = params[1]
     calibration_markers_img = params[2]
@@ -51,6 +52,7 @@ def calculate_cam_pose(marker_pos, marker_img_pos, cam_mtx, dist_coeffs):
     return rvec, tvec
 
 def check_reprojection(img, marker_pos, marker_img_pos, rvec, tvec, cam_mtx, dist_coeffs):
+    """Project marker positions from 3D to the image plane and compare with user indicated positions."""
     marker_img_pos_proj, _ = cv2.projectPoints(marker_pos, rvec, tvec, cam_mtx, dist_coeffs)
     marker_img_pos_proj = marker_img_pos_proj.squeeze()
 
@@ -112,12 +114,12 @@ if __name__ == "__main__":
     else:
         output_dir = video_path.parent
 
-    # Get marker positions in 3D
+    # Get marker positions in 3D. Assume same coordinate system as motion capture recording.
     with open(args.marker_file) as f:
         marker_dict = json.load(f)
-        marker_pos_tmp = np.array(marker_dict['pos'])
-        marker_pos = np.array([marker_pos_tmp[:, 0], -marker_pos_tmp[:, 2], marker_pos_tmp[:, 1]]).T.astype(np.float32)
+        marker_pos = np.array(marker_dict['pos']).astype(np.float32)
 
+    # Load intrinsic camera calibration
     with open(args.intrinsic_calib) as f:
         intrinsic_calib = json.load(f)
         cam_mtx = np.array(intrinsic_calib['cam_mtx'])
@@ -134,4 +136,4 @@ if __name__ == "__main__":
 
     rvec, tvec = calculate_cam_pose(marker_pos, marker_img_pos, cam_mtx, dist_coeffs)
     check_reprojection(frame, marker_pos, marker_img_pos, rvec, tvec, cam_mtx, dist_coeffs)
-    save_extrinsic_calib(output_dir, tvec, rvec)
+    save_extrinsic_calib(output_dir, rvec, tvec)

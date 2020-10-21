@@ -8,6 +8,7 @@ from pathlib import Path
 
 
 def create_checkerboard_3d(pattern_size, square_size):
+    """Create list of checkerboard corners in 3D."""
     # World coordinates of corners on checkerboard
     pattern_points = np.zeros((np.prod(pattern_size), 3), np.float32)
     pattern_points[:, :2] = np.indices(pattern_size).T.reshape(-1, 2)
@@ -16,6 +17,7 @@ def create_checkerboard_3d(pattern_size, square_size):
     return pattern_points
 
 def get_calibration_points(video_path, pattern_points, auto=False, n_calib_imgs=30):
+    """Extract image points of checkerboard corners in different frames of calibration video."""
     # Creating vector to store vectors of 3D points for each checkerboard image
     obj_points = []
     # Creating vector to store vectors of 2D points for each checkerboard image
@@ -79,6 +81,7 @@ def get_calibration_points(video_path, pattern_points, auto=False, n_calib_imgs=
     return obj_points, img_points, (w, h)
 
 def calibrate(obj_points, img_points, img_size_wh):
+    """Calculate camera matrix and distortion coefficients."""
     cam_mtx_guess = np.eye(3, 3)
     dist_coeffs_guess = np.zeros(5)
 
@@ -94,6 +97,7 @@ def calibrate(obj_points, img_points, img_size_wh):
     return cam_mtx, dist_coeffs
 
 def print_intrinsic_parameters(cam_mtx, dist_coeffs, img_size_wh):
+    """Pretty printing of camera parameters."""
     w, h = img_size_wh
 
     print("\nCamera parameters:")
