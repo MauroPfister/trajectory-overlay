@@ -96,6 +96,9 @@ class Plotter:
         return cam_mtx, dist_coeffs, rvec, tvec
 
     def get_video_startime(self, video_file):
+        """Estimate start date of video file using its metadata.
+        Note that this method might give incorrect results depending on the recording device. Only tested
+        for videos recorded on Android."""
         metadata = FFProbe(video_file)
         start_time_str = metadata.metadata['creation_time']
         duration_str = metadata.metadata['Duration']
@@ -109,14 +112,17 @@ class Plotter:
         return start_time_in_secs
 
     def set_frame(self, frame_id):
+        """Callback method for frame slider."""
         self.frame_id = frame_id
         self.update()
 
     def set_offset(self, offset):
+        """Callback method for offset slider."""
         self.t_offset = (offset / int(self.fps)) - self.offset_range_secs  # Convert slider value to offset in secs
         self.update()
 
     def update(self):
+        """Update displayed image with overlaid trajectories."""
         self.cap.set(cv2.CAP_PROP_POS_FRAMES, self.frame_id)  # Get current frame
         ret, frame = self.cap.read()
 
@@ -166,7 +172,6 @@ class Plotter:
             lines = LineCollection(segments, linewidths=line_widths, colors=line_colors)
             lines.set_capstyle('round')
             self.ax.add_collection(lines)
-            # self.ax.plot(traj[plot_range, 0], traj[plot_range, 1], linestyle='-')
 
         # Retrieve view of render buffer. See: https://stackoverflow.com/a/62040123
         self.fig.canvas.draw()
@@ -176,6 +181,7 @@ class Plotter:
         return out_frame
 
     def run(self):
+        """Main program loop."""
         self.update()  # Initialize screen with first frame
         while cv2.getWindowProperty(self.window_name, cv2.WND_PROP_VISIBLE) >= 1:
             keyCode = cv2.waitKey(500)
@@ -184,6 +190,7 @@ class Plotter:
         cv2.destroyAllWindows()
     
     def save(self):
+        """Save video with overlaid trajectories as adjusted by the user."""
         out = cv2.VideoWriter(str(self.output_file), cv2.VideoWriter_fourcc(*'mp4v'), self.fps, (self.width, self.height))
         pbar = tqdm(total=self.n_frames)  # Progress bar
 
