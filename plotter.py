@@ -29,7 +29,7 @@ class Plotter:
         self.n_frames = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
         self.t_start_video = self.get_video_startime(video_file)
-        self.cf_pos = self.import_trajectories(log_file)
+        self.trajectories = self.import_trajectories(log_file)
         self.frame_id = 0
         self.t_offset = 0
 
@@ -58,7 +58,8 @@ class Plotter:
         self.window_name = "Video"
         self.frame_slider = "Frame"
         self.offset_slider = "Offset"
-        self.offset_range = int(self.fps) * 2 * 10
+        self.offset_range_secs = 10  # Adjustable offset +- 10 seconds
+        self.offset_range = int(self.fps) * 2 * self.offset_range_secs  # Offset in integers for cv2 slider
 
         cv2.namedWindow(self.window_name, cv2.WINDOW_NORMAL)
         cv2.createTrackbar(self.frame_slider, self.window_name, 0, self.n_frames - 1, self.set_frame)
@@ -66,12 +67,13 @@ class Plotter:
         cv2.namedWindow(self.window_name, cv2.WINDOW_NORMAL)
 
     def import_trajectories(self, log_file):
-        cf_pos = []
+        """Loads and returns a list of trajectories from a log file."""
+        trajectories = []
         with h5py.File(log_file, 'r') as f:
-            for cf_id, cf_group in f.items():
-                cf_pos.append(np.array(cf_group['pos']))
+            for i, group in f.items():
+                trajectories.append(np.array(group['pos']))
 
-        return cf_pos 
+        return trajectories 
 
     def import_cam_calib(self, extr_calib_file, intr_calib_file, video_file):
         """Import extrinsic and intrinsic calibrations from json files."""
@@ -111,33 +113,34 @@ class Plotter:
         self.update()
 
     def set_offset(self, offset):
-        self.t_offset = (offset / int(self.fps)) - 10
+        self.t_offset = (offset / int(self.fps)) - self.offset_range_secs  # Convert slider value to offset in secs
         self.update()
 
     def update(self):
         self.cap.set(cv2.CAP_PROP_POS_FRAMES, self.frame_id)  # Get current frame
         ret, frame = self.cap.read()
 
-        trajectories = self.get_trajectories()
         # Plot trajectories over frame
-        out_frame = self.plot(frame, trajectories, self.frame_id, self.trail_len)
-        # Display the resulting frame
+        trajectories_proj = self.get_trajectories_proj()
+        out_frame = self.plot(frame, trajectories_proj, self.frame_id, self.trail_len)
         cv2.imshow(self.window_name, out_frame)
 
-    def get_trajectories(self):
+    def get_trajectories_proj(self):
+        """Compute projection of 3D trajectories onto image plane."""
         t_frames_shifted = self.t_frames + self.t_offset
-        trajectories = []
+        trajectories_proj = []
         # Plot trajectory of each drone
-        for data in self.cf_pos:
-            t, pos = data[:, 0], data[:, 1:]
+        for trajectory in self.trajectories:
+            t, pos = trajectory[:, 0], trajectory[:, 1:]  #  3D trajectory: [t, x, y, z]
             pos_interp = np.array([np.interp(t_frames_shifted, t, pos[:, i]) for i in range(pos.shape[1])]).T
             img_points, _ = cv2.projectPoints(pos_interp, self.rvec, self.tvec, self.cam_mtx, self.dist_coeffs)
             img_points = img_points.squeeze()
-            trajectories.append(img_points)
+            trajectories_proj.append(img_points)
 
-        return trajectories
+        return trajectories_proj
 
     def plot(self, img, trajectories, frame_id, trail_len):
+        """Plot projections of trajectories over image."""
         # TODO: Make this more object oriented (no arguments) or completely functional (pass fig and ax as arguments).
 
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)  # Change color space for matplotlib plotting
@@ -186,13 +189,13 @@ class Plotter:
 
         frame_id = 0
         self.cap.set(cv2.CAP_PROP_POS_FRAMES, frame_id)  # Reset to start
-        trajectories = self.get_trajectories()
+        trajectories_proj = self.get_trajectories_proj()
 
         while self.cap.isOpened():
             ret, frame = self.cap.read()
             if not ret:
                 break
-            out_frame = self.plot(frame, trajectories, frame_id, self.trail_len)
+            out_frame = self.plot(frame, trajectories_proj, frame_id, self.trail_len)
             out.write(out_frame)
             frame_id += 1
             pbar.update(1)
