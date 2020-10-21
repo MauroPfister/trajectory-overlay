@@ -144,6 +144,9 @@ cython_debug/
 *.mp4
 *.avi
 *.jpg
+*.JPG
 *.png
 *.pdf
 *.zip
+*.bag
+*.h5
