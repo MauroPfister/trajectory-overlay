@@ -123,7 +123,7 @@ if __name__ == "__main__":
     # Path to calibration video
     video_path = Path(args.video_file)
     if args.output is not None:
-        output_dir = args.output
+        output_dir = Path(args.output)
     else:
         output_dir = video_path.parent
 
