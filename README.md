@@ -28,10 +28,28 @@ To determine the pose of the camera in the world frame, you will need to place a
 ```
 Take a video of this setup and **do not** move the camera/phone anymore. Use the script
 `extrinsic_calibration.py` to compute and save the extrinsic calibration into a `json` file. Make sure to visually check the reprojection of the markers (green). If they are totally off 
-the intrinsic calibration is likely to be inacurate. 
+the intrinsic calibration is likely to be inaccurate. 
+
+You can call `extrinsic_calibration.py` as follows:
+
+```python extrinsic_calibration.py <video_path> <markers_file_path> <intrinsic_calib_file_path> ```
+
+Optional arguments are:
+
+* ```--output <output_folder>```
 
 ### 3. Overlay plot
 Finally you can use `plotter.py` to overlay trajectories on a video. The script expects the
 trajectories to be saved in a `hdf5` file. This `hdf5` file should contain a separate group
 for each trajectory (each drone/vehicle). Each group should contain a dataset called `pos`.
 This dataset should be a `N x 4` array where each row consists of `[unix timestamp, x, y, z]`.
+
+You can call `plotter.py` as follows:
+
+```python plotter.py <video_path> <log_trajectories_path> <intrinsic_calib_file_path> ```
+
+Optional arguments are:
+
+* ```--intrinsic_calib <intrinsic_calib_file_path>```
+* ```--extrinsic_calib <extrinsic_calib_file_path>```
+* ``` --output <output_folder>```
