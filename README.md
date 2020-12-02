@@ -32,9 +32,9 @@ the intrinsic calibration is likely to be inaccurate.
 
 You can call `extrinsic_calibration.py` as follows:
 
-```python3 extrinsic_calibration.py <video_path> <markers_file_path> <intrinsic_calib_file_path> ```
+```python extrinsic_calibration.py <video_path> <markers_file_path> <intrinsic_calib_file_path> ```
 
-and add the following argument:
+Optional arguments are:
 
 ```--output <output_folder>```
 
@@ -46,8 +46,8 @@ This dataset should be a `N x 4` array where each row consists of `[unix timesta
 
 You can call `plotter.py` as follows:
 
-```python3 plotter.py <video_path> <log_trajectories_path> <intrinsic_calib_file_path> ```
+```python plotter.py <video_path> <log_trajectories_path> <intrinsic_calib_file_path> ```
 
-and add the following arguments:
+Optional arguments are:
 
 ```--intrinsic_calib <intrinsic_calib_file_path> --extrinsic_calib <extrinsic_calib_file_path> --output <output_folder>```
