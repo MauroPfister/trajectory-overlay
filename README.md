@@ -36,7 +36,7 @@ You can call `extrinsic_calibration.py` as follows:
 
 Optional arguments are:
 
-```--output <output_folder>```
+* ```--output <output_folder>```
 
 ### 3. Overlay plot
 Finally you can use `plotter.py` to overlay trajectories on a video. The script expects the
@@ -50,4 +50,6 @@ You can call `plotter.py` as follows:
 
 Optional arguments are:
 
-```--intrinsic_calib <intrinsic_calib_file_path> --extrinsic_calib <extrinsic_calib_file_path> --output <output_folder>```
+* ```--intrinsic_calib <intrinsic_calib_file_path>```
+* ```--extrinsic_calib <extrinsic_calib_file_path>```
+* ``` --output <output_folder>```
