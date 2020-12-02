@@ -37,6 +37,7 @@ You can call `extrinsic_calibration.py` as follows:
 Optional arguments are:
 
 * ```--output <output_folder>```
+* ```--frame_index <integer_number>```
 
 ### 3. Overlay plot
 Finally you can use `plotter.py` to overlay trajectories on a video. The script expects the

@@ -118,12 +118,13 @@ if __name__ == "__main__":
     parser.add_argument('marker_file', type=str, help="Path to the .json file containing the 3D positions of the markers")
     parser.add_argument('intrinsic_calib', type=str, help="Path to the .json file containing the intrinsic camera calibration")
     parser.add_argument('--output', type=str, help='Output directory for calibration file')
+    parser.add_argument('--frame_index', type=str, help='Frame index of the video file w.r.t. which the calibration is done')
     args = parser.parse_args()
 
     # Path to calibration video
     video_path = Path(args.video_file)
     if args.output is not None:
-        output_dir = args.output
+        output_dir = Path(args.output)
     else:
         output_dir = video_path.parent
 
@@ -140,9 +141,13 @@ if __name__ == "__main__":
 
     # Get first available frame of video
     cap = cv2.VideoCapture(args.video_file)
-    ret = False
-    while not ret:
-        ret, frame = cap.read()
+
+    if args.frame_index is not None:
+        frame_index = int(args.frame_index)
+    else:
+        frame_index = 0
+    cap.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
+    ret, frame = cap.read()
 
     # Get marker positions in 2D
     marker_img_pos = get_marker_img_pos(frame)
