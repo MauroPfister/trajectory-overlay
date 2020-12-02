@@ -140,6 +140,9 @@ cython_debug/
 # VS code
 .vscode/
 
+# Pycharm
+.idea/
+
 # Media
 *.mp4
 *.avi
@@ -150,3 +153,4 @@ cython_debug/
 *.zip
 *.bag
 *.h5
+
